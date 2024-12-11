@@ -4,6 +4,7 @@ import com.ajudaqui.forum.dto.NovoTopicoForm
 import com.ajudaqui.forum.exception.NotFoundException
 import com.ajudaqui.forum.model.AtualizacaoTopicoForm
 import com.ajudaqui.forum.model.Topico
+import com.ajudaqui.forum.repository.TopicoRepository
 import com.ajudaqui.forum.view.TopicoView
 import org.springframework.stereotype.Service
 import java.util.stream.Collectors
@@ -12,7 +13,7 @@ import kotlin.NoSuchElementException
 
 @Service
 class TopicosService(
-    private var topicos: MutableList<Topico> = mutableListOf(),
+    private var topicrepository: TopicoRepository,
     private val cursoService: CursoService,
     private val usuarioService: UsuarioService
 ) {
@@ -20,7 +21,10 @@ class TopicosService(
 
     fun getTopicos(): List<TopicoView> {
 
-        return topicos.stream().map { t -> toTopicList(t) }.collect(Collectors.toList())
+        return topicrepository.findAll().stream()
+            .map { t ->
+                toTopicList(t)
+            }.collect(Collectors.toList())
     }
 
     private fun toTopicList(topico: Topico): TopicoView {
@@ -34,56 +38,46 @@ class TopicosService(
     }
 
     fun buscarPorId(id: Long): TopicoView {
-        var topico = topicos.find { it.id == id } ?: throw NotFoundException("Topico com Id não localizado")
+        //var topico = topicos.find { it.id == id } ?: throw NotFoundException("Topico com Id não localizado")
 
-        return toTopicList(topico);
+        var topico = topicrepository.findById(id).orElseThrow { NotFoundException("Topico com Id não localizado") }
+        return toTopicList(topico)
     }
 
     fun cadastrar(dto: NovoTopicoForm): TopicoView {
 
-        var tipoco = Topico(
-            id = topicos.size.toLong(),
+        var topico = Topico(
             titulo = dto.titulo,
             mensagem = dto.mensagem,
             curso = cursoService.buscarPorId(dto.cursoId),
             autor = usuarioService.buscarPorId(dto.autorId)
         )
-        topicos.add(
-            tipoco
-        )
-        return toTopicList(tipoco)
 
+        return toTopicList(save(topico))
+
+    }
+
+    private fun save(topico: Topico): Topico {
+        return topicrepository.save(topico)
     }
 
     fun atualizar(form: AtualizacaoTopicoForm): TopicoView {
         // Pegar o index do elemento que tenha o id solicitado
-        val topicoIndex = topicos.indexOfFirst { it.id == form.id }
-        if (topicoIndex == -1) {
-            throw NotFoundException("Tópico com ID ${form.id} não encontrado.")
-        }
-        val topico = topicos[topicoIndex]
+        var topico = topicrepository.findById(form.id).orElseThrow { NotFoundException("Topico com Id não localizado") }
+
 
         val topicoAtualizado = topico.copy(
             titulo = if (form.titulo.isNullOrBlank()) topico.titulo else form.titulo,
             mensagem = if (form.mensagem.isNullOrBlank()) topico.mensagem else form.mensagem
         )
-        topicos[topicoIndex] = topicoAtualizado
-
-        return toTopicList(topicoAtualizado)
+        return toTopicList(
+            save(topicoAtualizado)
+        )
     }
 
     fun deletar(id: Long) {
+        topicrepository.deleteById(id)
 
-        var topico = topicos.find { it.id == id } ?: throw NoSuchElementException("Id $id não localizado.")
-
-        /*
-        topicos.stream()
-            .filter{
-                t-> t.id == id
-            }.findFirst().orElseThrow { NoSuchElementException("Id $id não localizado.") }
-         */
-
-        topicos.remove(topico)
     }
 
 
