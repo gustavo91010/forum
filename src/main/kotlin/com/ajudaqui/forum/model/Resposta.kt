@@ -19,6 +19,6 @@ class Resposta (
     val autor: Usuario,
 
     @ManyToOne // mutias respostas para um topico
-    val tipoco: Topico,
+    val topico: Topico,
     val solucao: Boolean
 )
