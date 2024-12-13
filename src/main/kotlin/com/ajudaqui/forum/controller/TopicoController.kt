@@ -6,6 +6,7 @@ import com.ajudaqui.forum.service.TopicosService
 import com.ajudaqui.forum.view.TopicoView
 import jakarta.transaction.Transactional
 import jakarta.validation.Valid
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
@@ -29,6 +30,7 @@ class TopicoController(private val topicosService: TopicosService) {
 
     @GetMapping //required = false por que esse parametro é opcional
     // presta atenção no dominio da pagonação: import org.springframework.data.domain.Pageable
+   @Cacheable("lista_topicos_cache")
     fun listar(@RequestParam(required = false)
                nomeCurso: String?,
                paginacao: Pageable): Page<TopicoView> {
