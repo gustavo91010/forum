@@ -8,7 +8,6 @@ import com.ajudaqui.forum.repository.TopicoRepository
 import com.ajudaqui.forum.view.TopicoView
 import org.springframework.stereotype.Service
 import java.util.stream.Collectors
-import kotlin.NoSuchElementException
 
 
 @Service
@@ -19,15 +18,23 @@ class TopicosService(
 ) {
 
 
-    fun getTopicos(): List<TopicoView> {
+    fun getTopicos(nomeCurso: String?): List<TopicoView> {
 
-        return topicrepository.findAll().stream()
-            .map { t ->
-                toTopicList(t)
-            }.collect(Collectors.toList())
+        return if (nomeCurso.isNullOrEmpty()) {
+            totoTopicViewList(topicrepository.findAll())
+        } else {
+            totoTopicViewList(topicrepository.findByCursoNome(nomeCurso))
+        }
+
     }
 
-    private fun toTopicList(topico: Topico): TopicoView {
+    private fun totoTopicViewList(topicos: MutableList<Topico>): MutableList<TopicoView> {
+        return topicos.stream()
+            .map { toTopicView(it) }
+            .collect(Collectors.toList())
+    }
+
+    private fun toTopicView(topico: Topico): TopicoView {
         return TopicoView(
             id = topico.id,
             titulo = topico.titulo,
@@ -41,7 +48,7 @@ class TopicosService(
         //var topico = topicos.find { it.id == id } ?: throw NotFoundException("Topico com Id não localizado")
 
         var topico = topicrepository.findById(id).orElseThrow { NotFoundException("Topico com Id não localizado") }
-        return toTopicList(topico)
+        return toTopicView(topico)
     }
 
     fun cadastrar(dto: NovoTopicoForm): TopicoView {
@@ -53,7 +60,7 @@ class TopicosService(
             autor = usuarioService.buscarPorId(dto.autorId)
         )
 
-        return toTopicList(save(topico))
+        return toTopicView(save(topico))
 
     }
 
@@ -70,7 +77,7 @@ class TopicosService(
             titulo = if (form.titulo.isNullOrBlank()) topico.titulo else form.titulo,
             mensagem = if (form.mensagem.isNullOrBlank()) topico.mensagem else form.mensagem
         )
-        return toTopicList(
+        return toTopicView(
             save(topicoAtualizado)
         )
     }

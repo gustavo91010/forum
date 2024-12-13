@@ -4,4 +4,7 @@ import com.ajudaqui.forum.model.Topico
 import org.springframework.data.jpa.repository.JpaRepository
 
 interface TopicoRepository: JpaRepository<Topico, Long> {
+
+    // pegando o nome do objeto curso que esta na classe topico
+    fun findByCursoNome(nome:String): MutableList<Topico>
 }
