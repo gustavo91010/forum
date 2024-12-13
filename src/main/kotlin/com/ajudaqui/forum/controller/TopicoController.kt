@@ -6,6 +6,8 @@ import com.ajudaqui.forum.service.TopicosService
 import com.ajudaqui.forum.view.TopicoView
 import jakarta.transaction.Transactional
 import jakarta.validation.Valid
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -26,8 +28,11 @@ class TopicoController(private val topicosService: TopicosService) {
 
 
     @GetMapping //required = false por que esse parametro é opcional
-    fun listar(@RequestParam(required = false) nomeCurso: String?): List<TopicoView> {
-        return topicosService.getTopicos(nomeCurso)
+    // presta atenção no dominio da pagonação: import org.springframework.data.domain.Pageable
+    fun listar(@RequestParam(required = false)
+               nomeCurso: String?,
+               paginacao: Pageable): Page<TopicoView> {
+        return topicosService.getTopicos(nomeCurso,paginacao)
     }
 
     @GetMapping("/{id}")

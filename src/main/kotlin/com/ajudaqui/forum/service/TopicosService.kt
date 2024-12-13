@@ -6,6 +6,8 @@ import com.ajudaqui.forum.model.AtualizacaoTopicoForm
 import com.ajudaqui.forum.model.Topico
 import com.ajudaqui.forum.repository.TopicoRepository
 import com.ajudaqui.forum.view.TopicoView
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import java.util.stream.Collectors
 
@@ -18,14 +20,20 @@ class TopicosService(
 ) {
 
 
-    fun getTopicos(nomeCurso: String?): List<TopicoView> {
-
-        return if (nomeCurso.isNullOrEmpty()) {
-            totoTopicViewList(topicrepository.findAll())
+    fun getTopicos(nomeCurso: String?, paginacao: Pageable): Page<TopicoView> {
+/*
+http://localhost:8080/topicos?size=2&page=1 escolhedo a pagina
+http://localhost:8080/topicos?size=2&page=1&sort=id,desc ordenando
+os parametros do page estão no proprio objeto de retorno
+ */
+        val tp : Page<Topico> = if (nomeCurso.isNullOrEmpty()) {
+            topicrepository.findAll(paginacao)
+            // verificar o import para pegaro find all qu ereceba a paginação
         } else {
-            totoTopicViewList(topicrepository.findByCursoNome(nomeCurso))
+            topicrepository.findByCursoNome(nomeCurso, paginacao)
         }
-
+        // passando por todos os elemntos do page e convertendo eles em topicoview
+        return tp.map {  toTopicView(it)}
     }
 
     private fun totoTopicViewList(topicos: MutableList<Topico>): MutableList<TopicoView> {
